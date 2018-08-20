@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+<canvas id="myCanvas" width="600px" height="660px">
+</canvas>
+<script>
+
+
+    //V1.0 : 实现棋子的布局，画布及游戏场景的初始化
+    //V2.0 : 实现棋子的颜色改变
+    //V3.0 ：实现所有象棋的走棋规则
+    //V4.0 : 实现所有棋子的吃子功能
+    var canvas = document.getElementById("myCanvas");
+    var context = canvas.getContext("2d");
+
+    /**
+     * 棋子对象
+     * @param x
+     * @param y
+     * @param color
+     * @constructor
+     */
+    function Chess(x, y, color, type) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+
+
+        this.type = type;
+
+        // 记录颜色
+        this.chessColor = color;
+
+        // 是否死掉
+        this.isDead = false;
+    }
+
+    // 成员函数
+    Chess.prototype = {
+        _getChessText: function () {
+            switch (this.type) {
+                case "CHE":
+                    return "车";
+                case "MA":
+                    return "马";
+                case "PAO":
+                    return "炮";
+                case "BING":
+                    return "兵";
+                case "JIANG":
+                    return "将";
+                case "SHI":
+                    return "士";
+                case "XIANG":
+                    return "相";
+            }
+            return "错误";
+        }
+    }
+
+    /**
+     * 游戏场景
+     * @constructor
+     */
+    function Game() {
+
+        // 存放当前棋盘上所有的棋子
+        this._chesses = [];
+
+        //初始位置
+        this._initX = 60;
+        this._initY = 60;
+
+        // 判断鼠标是否点击有棋子
+        this._selectedChess = null;
+
+        this._initCount = 0;
+    }
+
+    Game.prototype = {
+        // 场景的初始化
+        execute: function () {
+            this._initChesses();
+            this._start();
+        },
+        _initChesses: function () {
+            // 绘制棋子（初始位置）
+            // 总共需要绘制32颗棋子
+
+            // 红色棋子
+            var redChess;
+            for (var i = 0; i < 4; i++) {
+                for (var j = 0; j < 9; j++) {
+                    if ((i == 0 && j == 0) || (j == 8 && i == 0)) {
+                        // 把棋子的颜色传进去
+                        redChess = new Chess(j, i, "red", "CHE");
+                        this._chesses.push(redChess);
+                    } else if ((j == 1 && i == 0) || (j == 7 && i == 0 )) {
+                        redChess = new Chess(j, i, "red", "MA");
+                        this._chesses.push(redChess);
+                    } else if ((j == 2 && i == 0) || (j == 6 && i == 0)) {
+                        redChess = new Chess(j, i, "red", "XIANG");
+                        this._chesses.push(redChess);
+                    } else if ((j == 3 && i == 0) || (j == 5 && i == 0)) {
+                        redChess = new Chess(j, i, "red", "SHI");
+                        this._chesses.push(redChess);
+                    } else if ((j == 4 && i == 0)) {
+                        redChess = new Chess(j, i, "red", "JIANG");
+                        this._chesses.push(redChess);
+                    } else if ((j == 1 && i == 2) || (j == 7 && i == 2)) {
+                        redChess = new Chess(j, i, "red", "PAO");
+                        this._chesses.push(redChess);
+                    } else if ((j == 0 && i == 3) || (j == 2 && i == 3) || (j == 4 && i == 3) || (j == 6 && i == 3) || (j == 8 && i == 3)) {
+                        redChess = new Chess(j, i, "red", "BING");
+                        this._chesses.push(redChess);
+                    }
+
+
+                }
+            }
+
+            // 绘制黑色棋子
+            var blackChess;
+            for (var i = 6; i < 10; i++) {
+                for (var j = 0; j < 10; j++) {
+                    if ((j == 0 && i == 9) || (j == 8 && i == 9)) {
+                        blackChess = new Chess(j, i, "black", "CHE");
+                        this._chesses.push(blackChess);
+                    } else if ((j == 1 && i == 9) || (j == 7 && i == 9)) {
+                        blackChess = new Chess(j, i, "black", "MA");
+                        this._chesses.push(blackChess);
+                    } else if ((j == 2 && i == 9) || (j == 6 && i == 9)) {
+                        blackChess = new Chess(j, i, "black", "XIANG");
+                        this._chesses.push(blackChess);
+                    } else if ((j == 3 && i == 9) || (j == 5 && i == 9)) {
+                        blackChess = new Chess(j, i, "black", "SHI");
+                        this._chesses.push(blackChess);
+                    } else if (j == 4 && i == 9) {
+                        blackChess = new Chess(j, i, "black", "JIANG");
+                        this._chesses.push(blackChess);
+                    } else if ((j == 1 && i == 7) || (j == 7 && i == 7)) {
+                        blackChess = new Chess(j, i, "black", "PAO");
+                        this._chesses.push(blackChess);
+                    } else if ((j == 0 && i == 6) || (j == 2 && i == 6) || (j == 4 && i == 6) || (j == 6 && i == 6) || (j == 8 && (i == 6))) {
+                        blackChess = new Chess(j, i, "black", "BING");
+                        this._chesses.push(blackChess);
+                    }
+                }
+            }
+
+            //console.log(redChess);
+            //console.log(blackChess);
+            console.log(this._chesses);
+
+        },
+        /**
+         * 绘制棋子 车马相士将
+         * @private
+         */
+        _drawChesses: function () {
+
+
+            var isDeadChess = null;
+            // 根据游戏中棋子的数目来绘制棋子
+            // 游戏中的棋子始终是32颗， 因此只能根据棋子是否存活来决定是否绘制这个棋子(原来的位置还是有棋子， 这是让他隐藏起来)
+            for (var i = 0; i < this._chesses.length; i++) {
+                var chess = this._chesses[i];
+
+                // 原来的位置还是有棋子， 这是让他隐藏起来
+                if (!chess.isDead) {
+                    // 只有当这个棋子的属性isDead = false; 才绘制这个棋子
+                    // 根据棋子的属性来绘制
+                    context.fillStyle = "#C78843";
+                    context.beginPath();
+                    // 绘制棋子(注意要把棋子的初始位置复位)
+                    context.arc(chess.x * 60 + this._initX, chess.y * 60 + this._initY, 25, 0, Math.PI * 2, true);
+                    context.closePath();
+                    context.fill();
+
+
+                    // 绘制文本
+                    if (chess.color == "red") {
+                        context.fillStyle = 'red';
+                    }
+                    if (chess.color == "black") {
+                        context.fillStyle = 'black';
+                    }
+                    if (chess.color == "blue") {
+                        context.fillStyle = 'blue';
+                    }
+
+                    context.font = '43px 华文新魏';
+                    context.fillText(chess._getChessText(), chess.x * 60 + this._initX - 22, chess.y * 60 + this._initY + 10);
+                }
+                else {
+
+
+                    isDeadChess = chess;
+
+                }
+
+
+            }
+
+            // 有棋子被吃了，就重新开始
+            //this._selectedChess = null;
+            if (this._initCount == 0) {
+
+                //console.log(chess.x+","+chess.y+","+chess.type+"已经隐藏");
+            }
+
+
+        },
+        _drawChessboard: function () {
+
+            context.strokeStyle = "black";
+            // 绘制棋盘外边界
+            context.lineWidth = 3;
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(600, 0);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(0, 660);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(600, 0);
+            context.lineTo(600, 660);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(0, 660);
+            context.lineTo(660, 660);
+            context.closePath();
+            context.stroke();
+
+            // 内部的外边界
+            context.beginPath();
+            context.moveTo(40, 40);
+            context.lineTo(40, 620);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(40, 40);
+            context.lineTo(560, 40);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(560, 40);
+            context.lineTo(560, 620);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(560, 620);
+            context.lineTo(40, 620);
+            context.closePath();
+            context.stroke();
+
+
+            //棋盘横线
+            context.lineWidth = 1;
+            for (var i = 1; i < 11; i++) {
+                context.beginPath();
+                context.moveTo(60, 60 * i);
+                context.lineTo(540, 60 * i);
+                context.closePath();
+                context.stroke();
+            }
+
+            // 棋盘纵线
+            for (var i = 1; i < 10; i++) {
+                context.beginPath();
+                context.moveTo(i * 60, 60);
+                context.lineTo(i * 60, 300);
+                context.closePath();
+                context.stroke();
+            }
+
+            for (var i = 1; i < 10; i++) {
+                context.beginPath();
+                context.moveTo(i * 60, 360);
+                context.lineTo(i * 60, 600);
+                context.closePath();
+                context.stroke();
+            }
+
+            context.beginPath();
+            context.moveTo(60, 300);
+            context.lineTo(60, 360);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(540, 300);
+            context.lineTo(540, 360);
+            context.closePath();
+            context.stroke();
+
+
+            // 棋盘斜线
+            context.beginPath();
+            context.moveTo(240, 60);
+            context.lineTo(360, 180);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(360, 60);
+            context.lineTo(240, 180);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(240, 480);
+            context.lineTo(360, 600);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(360, 480);
+            context.lineTo(240, 600);
+            context.closePath();
+            context.stroke();
+
+            // 绘制炮的位置(左上)
+            context.beginPath();
+            context.moveTo(115, 160);
+            context.lineTo(115, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(115, 175);
+            context.lineTo(100, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 160);
+            context.lineTo(125, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 175);
+            context.lineTo(140, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(115, 185);
+            context.lineTo(115, 200);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(115, 185);
+            context.lineTo(100, 185);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 185);
+            context.lineTo(125, 200);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 185);
+            context.lineTo(140, 185);
+            context.closePath();
+            context.stroke();
+
+
+            // 右上
+            context.beginPath();
+            context.moveTo(475, 175);
+            context.lineTo(460, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(475, 175);
+            context.lineTo(475, 160);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 160);
+            context.lineTo(485, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 175);
+            context.lineTo(500, 175);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 185);
+            context.lineTo(485, 200);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 185);
+            context.lineTo(500, 185);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(475, 185);
+            context.lineTo(475, 200);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(475, 185);
+            context.lineTo(460, 185);
+            context.closePath();
+            context.stroke();
+
+            // 左下
+            context.beginPath();
+            context.moveTo(115, 485);
+            context.lineTo(115, 500);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(115, 485);
+            context.lineTo(100, 485);
+            context.closePath();
+            context.stroke();
+
+
+            context.beginPath();
+            context.moveTo(115, 475);
+            context.lineTo(100, 475);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(115, 475);
+            context.lineTo(115, 460);
+            context.closePath();
+            context.stroke();
+
+
+            context.beginPath();
+            context.moveTo(125, 475);
+            context.lineTo(140, 475);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 475);
+            context.lineTo(125, 460);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 485);
+            context.lineTo(140, 485);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(125, 485);
+            context.lineTo(125, 500);
+            context.closePath();
+            context.stroke();
+
+
+            // 右下
+            context.beginPath();
+            context.moveTo(475, 485);
+            context.lineTo(475, 500);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(475, 485);
+            context.lineTo(460, 485);
+            context.closePath();
+            context.stroke();
+
+
+            context.beginPath();
+            context.moveTo(475, 475);
+            context.lineTo(475, 460);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(475, 475);
+            context.lineTo(460, 475);
+            context.closePath();
+            context.stroke();
+
+
+            context.beginPath();
+            context.moveTo(485, 475);
+            context.lineTo(500, 475);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 475);
+            context.lineTo(485, 460);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 485);
+            context.lineTo(500, 485);
+            context.closePath();
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(485, 485);
+            context.lineTo(485, 500);
+            context.closePath();
+            context.stroke();
+
+
+        },
+        _drawnTitle: function () {
+            //context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'black';
+            context.font = '40px 华文新魏';
+            context.fillText("楚河", 130, 340);
+            context.fillText("汉界", 380, 340);
+        },
+        _start: function () {
+            // 监听事件， 把触发这个事件的对象也传递过去
+            document.addEventListener("click", this._mouseClick.bind(this));
+            var that = this;
+
+            // 利用定时器不断重绘canvas
+            var timer = setInterval(function () {
+                that._draw();
+            }, 30);
+
+        },
+        _draw: function () {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            this._drawChessboard();
+
+            // 绘制棋子
+            this._drawChesses();
+
+
+            this._drawnTitle();
+        },
+        _mouseClick: function (e) {
+            // 把棋盘归一化
+            var px = e.clientX - this._initX + 25;
+            var py = e.clientY - this._initY + 25;
+            //console.log(px + " "+py);
+
+
+            // 当前鼠标点击棋盘的位置
+            var x = parseInt(px / 60);
+            var y = parseInt(py / 60);
+
+            if (x > 8 || x < 0 || y > 9 || y < 0 || px < 0) {
+                return;
+            }
+
+
+            console.log(this._selectedChess);
+
+            // 之前没有选中棋子（一直点击的是空白位置）
+            if (this._selectedChess == null) {
+                //如果当前鼠标点击的位置有棋子，就是选中了棋子
+                for (var i = 0; i < this._chesses.length; i++) {
+                    var chess = this._chesses[i];
+
+                    // 每次拿出来棋子都要看一下这个棋子是不是还活着， 已经死了的棋子不处理
+                    if (!chess.isDead) {
+                        if (x == chess.x && y == chess.y) {
+                            // 如果有棋子
+                            this._selectedChess = chess;
+                            this._selectedChess.color = "blue";
+                            break;
+                        } else {
+                            // 没有棋子
+                            //alert("没有棋子");
+                            //break;
+                        }
+                    }
+
+
+                }
+            } else {
+
+                var color = this._selectedChess.chessColor;
+                var srcX = this._selectedChess.x;
+                var srcY = this._selectedChess.y;
+                var destX = x;
+                var destY = y;
+                this._canKill(srcX, srcY, destX, destY);
+
+                // 如果已经有了选择的棋子，就看这一次点击的位置有没有棋子
+                /*var chess = this._getChess(x, y);
+                if (chess){
+                    // 如果这个位置有棋子
+                    console.log("有棋子");
+                    if (chess.chessColor == this._selectedChess.chessColor){
+                        // 如果这两个棋子的颜色相同
+                        alert("请不要自相残杀！");
+                        //同一个棋子点击了两下就恢复初始状态
+                        //this._selectedChess = null;
+                        this._selectedChess.color = this._selectedChess.chessColor;
+                        this._selectedChess = null;
+                        return;
+                    }
+                    else {
+                        // 如果颜色不相同
+                        // 首先看一下这个棋子能不能移动
+                        var type = this._selectedChess.type;
+                        var srcX = this._selectedChess.x;
+                        var srcY = this._selectedChess.y;
+                        var destX = x;
+                        var destY = y;
+                        var color = this._selectedChess.chessColor;
+                        // 我们先来判断能不能移动棋子， 然后再来判断能不能吃子
+                        switch (type) {
+                            case "CHE":
+                                if (this._canMoveChe(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "MA":
+                                if (this._canMoveMa(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "XIANG":
+                                if (this._canMoveXiang(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "SHI":
+                                if (this._canMoveShi(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "JIANG":
+                                if (this._canMoveJiang(color, srcX, srcY, destX, destY)) {
+
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+
+                                break;
+                            case "PAO":
+                                if (this._canMovePao(color, srcX, srcY, destX, destY)) {
+
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                            case "BING":
+                                if (this._canMoveBing(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                        }
+
+                    }
+                }
+
+
+                // 已经有选择的棋子
+                for (var i = 0; i < this._chesses.length; i++) {
+                    var chess = this._chesses[i];
+                    // 只处理没有死掉的棋子
+                    if (x == chess.x && y == chess.y) {
+                        // 这次点击的位置如果有棋子，就看有没有死
+                        if (!chess.isDead) {
+                            // 第一次有棋子， 第二次也有棋子
+                            // 判断两次点击的棋子颜色是不是相同
+                            if (chess.chessColor == this._selectedChess.chessColor) {
+                                // 两次点击的颜色都相同
+                                if ((chess.type == this._selectedChess.type) && (chess.x == this._selectedChess.x) && (chess.y == this._selectedChess.y)) {
+                                    // 颜色坐标和属性都相同（同一个棋子）
+                                    alert("你选择的是同一个棋子");
+
+                                    //同一个棋子点击了两下就恢复初始状态
+                                    //this._selectedChess = null;
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+                                    break;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能自相残杀！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+                                    break;
+                                }
+
+                            } else {
+                                // 两次点击的颜色不相同
+                                alert(this._selectedChess.chessColor + "可以吃" + chess.chessColor);
+                                var type = this._selectedChess.type;
+
+                                // 在我吃棋子的时候我先去判断选择的棋子能不能移动到目标的位置
+                                switch (type) {
+                                    case "CHE":
+                                        break;
+                                    case "MA":
+                                        break;
+                                    case "XIANG":
+                                        break;
+                                    case "SHI":
+                                        break;
+                                    case "JIANG":
+                                        if (this._canMoveJiang(x, y)) {
+                                            // 目标棋子消失，我方棋子补上去
+                                            chess.isDead = true;
+
+                                            // 补上去(这里修改的其实是之前那颗棋子的引用)
+                                            this._selectedChess.x = chess.x;
+                                            this._selectedChess.y = chess.y;
+                                            // 颜色恢复
+                                            this._selectedChess.color = this._selectedChess.chessColor;
+
+
+                                            // 吃完棋子之后， 就恢复到初始状态
+                                            this._selectedChess = null;
+                                        } else {
+                                            // 点击了颜色相同但是属性不同的其他棋子
+                                            alert("吃法违规！");
+
+                                            // 颜色相同的同类棋子就恢复初始状态
+                                            this._selectedChess.color = this._selectedChess.chessColor;
+                                            this._selectedChess = null;
+                                        }
+
+                                        break;
+                                    case "PAO":
+                                    case "BING":
+                                        break;
+                                }
+
+
+                                // 目标棋子消失，我方棋子补上去
+                                chess.isDead = true;
+
+                                // 补上去(这里修改的其实是之前那颗棋子的引用)
+                                this._selectedChess.x = chess.x;
+                                this._selectedChess.y = chess.y;
+                                // 颜色恢复
+                                this._selectedChess.color = this._selectedChess.chessColor;
+
+
+                                // 吃完棋子之后， 就恢复到初始状态
+                                this._selectedChess = null;
+                                break;
+                            }
+
+                        } else {
+                            //  第一次有棋子， 第二次没有棋子
+                            //alert("移动棋子");
+                            //break;
+                            // 棋子已经死了的话，就不考虑
+                            console.log("移动棋子");
+                        }
+                    } else {
+                        // 第二次点击的位置上面没有棋子
+                        console.log("移动棋子222");
+                        var type = this._selectedChess.type;
+                        var srcX = this._selectedChess.x;
+                        var srcY = this._selectedChess.y;
+                        var destX = x;
+                        var destY = y;
+                        var color = this._selectedChess.chessColor;
+                        // 我们先来判断能不能移动棋子， 然后再来判断能不能吃子
+                        switch (type) {
+                            case "CHE":
+                                if (this._canMoveChe(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "MA":
+                                if (this._canMoveMa(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "XIANG":
+                                if (this._canMoveXiang(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "SHI":
+                                if (this._canMoveShi(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                            case "JIANG":
+                                if (this._canMoveJiang(color, srcX, srcY, destX, destY)) {
+
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+
+                                break;
+                            case "PAO":
+                                if (this._canMovePao(color, srcX, srcY, destX, destY)) {
+
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                            case "BING":
+                                if (this._canMoveBing(color, srcX, srcY, destX, destY)) {
+                                    // 移动棋子
+                                    this._moveChess(srcX, srcY, destX, destY);
+
+                                    return;
+                                } else {
+                                    // 点击了颜色相同但是属性不同的其他棋子
+                                    alert("不能移动棋子！");
+
+                                    // 颜色相同的同类棋子就恢复初始状态
+                                    this._selectedChess.color = this._selectedChess.chessColor;
+                                    this._selectedChess = null;
+
+                                    return;
+                                }
+                                break;
+                        }
+
+                    }
+
+
+                }*/
+                //alert("1212");
+            }
+
+
+        },
+        _isChessSelected: function () {
+
+        },
+        _canMoveChe: function (color, srcX, srcY, destX, destY) {
+            // 获得点击坐标处的所有xy上面的棋子状态
+            var allCanMovePoint = this._getXAndYChesss(srcX, srcY);
+            // 想办法获得横纵坐标上面一旦有棋子之间的坐标
+
+
+            // 这几个数组主要用于存储我点击的位置上下左右四个方向第一次出现棋子到我现在这个棋子之间的棋子状态
+            var rightChess = this._getRightChesses(srcX, srcY);
+            var leftChess = this._getLeftChesses(srcX, srcY);
+            var upChess = this._getUpChesses(srcX, srcY);
+            var downChess = this._getDownChesses(srcX, srcY);
+
+            // 开始实现移动车的规则.
+            for (var i = 0; i < allCanMovePoint.length; i++) {
+                var point = allCanMovePoint[i];
+                if (destX == point.x && destY == point.y) {
+                    // 如果我当前要移动的点在我的这个点集合中
+                    if (!point.tag) {
+                        //而且这个位置没有棋子
+                        // 开始进一步限定移动的范围
+                        // 上
+                        if (destY < srcY) {
+                            for (var j = 0; j < upChess.length; j++) {
+                                // 取出可以向上移动的所有棋子的位置
+                                var chess = upChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 下
+                        if (destY > srcY) {
+                            for (var j = 0; j < downChess.length; j++) {
+                                var chess = downChess[j];
+
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 左
+                        if (destX < srcX) {
+                            for (var j = 0; j < leftChess.length; j++) {
+                                var chess = leftChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 右
+                        if (destX > srcX) {
+                            for (var j = 0; j < rightChess.length; j++) {
+                                var chess = rightChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                        }
+                        return false;
+                    }
+                    else{
+                        //如果有棋子
+                        // 看下这个棋子的颜色
+                        var chessColor = point.chessColor;
+                        if (chessColor != ""){
+                            // 这个位置有棋子
+                            var srcChess = this._getChess(srcX, srcY);
+                            var killChess = this._getChess(destX, destY);
+                            if (chessColor != srcChess.chessColor){
+                                // 杀死的棋子消失
+                                killChess.isDead = true;
+                                srcChess.x = destX;
+                                srcChess.y = destY;
+                                // 可以移动
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+
+
+        },
+        _canMoveMa: function (color, srcX, srcY, destX, destY) {
+
+            // 获得可以移动的位置点
+            var maCanMovePoint = [];
+            // 是否可以真正移动的标记
+            var isMaCanMove = false;
+
+            // 找到马周围的可以移动的8个点
+            var tag = false; // 默认没有棋子
+            for (var i = srcX - 2; i <= srcX + 2; i++) {
+                for (var j = srcY - 2; j <= srcY + 2; j++) {
+                    // 只存储在棋盘里面的棋子
+                    if (i >= 0 && i <= 8 && j >= 0 && j <= 9) {
+
+                        // 保存之前还有看一下以下几个问题(向左)
+                        if ((destX == srcX - 2 && destY == srcY - 1) || (destX == srcX - 2 && destY == srcY + 1)){
+                            var chess = this._getChess(srcX-1, srcY);
+                            if (!chess){
+                                isMaCanMove = true;
+                            }
+                        }
+
+                        // 向上
+                        if ((destX == srcX - 1 && destY == srcY-2) || (destX == srcX+1 && destY == srcY-2)){
+                            var chess = this._getChess(srcX, srcY-1);
+                            if (!chess){
+                                isMaCanMove = true;
+                            }
+                        }
+
+                        // 向右
+                        if ((destX == srcX +2 && destY == srcY-1) || (destX == srcX+2 && destY == srcY+1)){
+                            var chess = this._getChess(srcX+1, srcY);
+                            if (!chess){
+                                isMaCanMove = true;
+                            }
+                        }
+
+                        // 向下
+                        if ((destX == srcX -1 && destY == srcY+2) || (destX == srcX+1 && destY == srcY+2)){
+                            var chess = this._getChess(srcX, srcY+1);
+                            if (!chess){
+                                isMaCanMove = true;
+                            }
+                        }
+
+
+                        if ((srcX - 2 == i && srcY - 1 == j) || (srcX - 2 == i && srcY + 1 == j) || (srcX - 1 == i && srcY - 2 == j) || (srcX - 1 == i && srcY + 2 == j) || (srcX + 1 == i && srcY - 2 == j) || (srcX + 1 == i && srcY + 2 == j) || (srcX + 2 == i && srcY - 1 == j) || (srcX + 2 == i && srcY + 1 == j)) {
+                            var chess = this._getChess(i, j);
+                            if (chess) {
+                                tag = true;
+                            } else {
+                                tag = false;
+                            }
+
+
+
+                            // 保存点
+                            maCanMovePoint.push({
+                                x: i,
+                                y: j,
+                                tag: tag,
+                                isCanMove : isMaCanMove
+                            });
+
+                        }
+
+                    }
+
+                }
+            }
+
+
+            // 拿到这个集合， 然后遍历
+            for (var i = 0; i<maCanMovePoint.length; i++){
+                var point = maCanMovePoint[i];
+                //看我当前点击的位置有没有在这些点集合中
+                if (destX == point.x && destY == point.y){
+                    //如果在的话
+                    if (!point.tag){
+                        // 而且这个位置没有棋子
+                        if (point.isCanMove){
+
+                            return true;
+                        }
+                    }
+                }
+
+            }
+
+
+            return false;
+
+        },
+        _canMoveXiang: function (color, srcX, srcY, destX, destY) {
+            var xiangCanMovePoint = [];
+            if (color == "black") {
+                xiangCanMovePoint = [{x: 0, y: 7}, {x: 2, y: 5}, {x: 2, y: 9}, {x: 4, y: 7}, {x: 6, y: 5}, {
+                    x: 6,
+                    y: 9
+                }, {x: 8, y: 7}];
+            } else {
+                xiangCanMovePoint = [{x: 0, y: 2}, {x: 2, y: 0}, {x: 2, y: 4}, {x: 4, y: 2}, {x: 6, y: 0}, {
+                    x: 6,
+                    y: 4
+                }, {x: 8, y: 2}];
+            }
+
+            // 象的移动不能超过2格子
+            if (Math.abs(srcX - destX) == 2 || Math.abs(srcY - destY) == 2) {
+                // 再看这个田字状的中心有没有棋子
+                var centerX = (destX + srcX) / 2;
+                var centerY = (destY + srcY) / 2;
+                console.log("cebter:" + centerX + "," + centerY);
+                if (this._getChess(centerX, centerY)) {
+                    // 有棋子
+                    return false;
+                } else {
+                    for (var i = 0; i < xiangCanMovePoint.length; i++) {
+                        var point = xiangCanMovePoint[i];
+                        if (destX == point.x && destY == point.y) {
+                            // 再去看这个位置有没有棋子
+                            var chess = this._getChess(destX, destY);
+                            if (chess && chess.chessColor == color) {
+                                // 有棋子
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+            }
+            return false;
+        },
+        _canMoveShi: function (color, srcX, srcY, destX, destY) {
+            var shiCanMovePoint = [];
+            if (color == "black") {
+                shiCanMovePoint = [{x: 3, y: 7}, {x: 3, y: 9}, {x: 5, y: 7}, {x: 5, y: 9}, {x: 4, y: 8}];
+            } else {
+                shiCanMovePoint = [{x: 3, y: 0}, {x: 3, y: 2}, {x: 5, y: 0}, {x: 5, y: 2}, {x: 4, y: 1}];
+            }
+
+
+            // 一进来看下是不是跨格子移动
+            if (Math.abs(srcX - destX) == 1 || Math.abs(srcY - destY) == 1) {
+                for (var i = 0; i < shiCanMovePoint.length; i++) {
+                    var point = shiCanMovePoint[i];
+                    if (destX == point.x && destY == point.y) {
+                        //再去看这个位置有没有棋子
+                        var chess = this._getChess(destX, destY);
+                        // 如果这里有棋子，而且是自己的棋子，就不能移动
+                        if (chess && chess.chessColor == color) {
+                            // 有棋子
+                            return false;
+                        } else {
+                            // 没有棋子
+                            return true;
+                        }
+                    }
+                }
+            }
+        },
+        _canMoveJiang: function (color, srcX, srcY, destX, destY) {
+            var jingCanMovePoint = [];
+            // 先看下是什么颜色
+            if (color == "black") {  // 黑色棋子
+                jingCanMovePoint = [{x: 3, y: 7}, {x: 3, y: 8}, {x: 3, y: 9}, {x: 4, y: 7}, {
+                    x: 4,
+                    y: 8
+                }, {x: 4, y: 9}, {x: 5, y: 7}, {x: 5, y: 8}, {x: 5, y: 9}];
+
+            } else {      // 红色棋子
+                jingCanMovePoint = [{x: 3, y: 0}, {x: 3, y: 1}, {x: 3, y: 2}, {x: 4, y: 0}, {
+                    x: 4,
+                    y: 1
+                }, {x: 4, y: 2}, {x: 5, y: 0}, {x: 5, y: 1}, {x: 5, y: 2}];
+
+            }
+
+
+            //一进来就先判断是不是跨格子移动
+            if (srcX == destX || srcY == destY) {
+                if (Math.abs(srcX - destX) == 1 || Math.abs(srcY - destY) == 1) {
+                    for (var i = 0; i < jingCanMovePoint.length; i++) {
+                        var point = jingCanMovePoint[i];
+                        if (destX == point.x && destY == point.y) {
+                            // 然后再去看这些点上有没有棋子
+                            var chess = this._getChess(destX, destY);
+                            if (chess) {
+                                // 有棋子
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return false;
+            }
+
+        },
+        _canMovePao: function (color, srcX, srcY, destX, destY) {
+            // 获得点击坐标处的所有xy上面的棋子状态
+            var allCanMovePoint = this._getXAndYChesss(srcX, srcY);
+            // 想办法获得横纵坐标上面一旦有棋子之间的坐标
+
+
+            // 这几个数组主要用于存储我点击的位置上下左右四个方向第一次出现棋子到我现在这个棋子之间的棋子状态
+            var rightChess = this._getRightChesses(srcX, srcY);
+            var leftChess = this._getLeftChesses(srcX, srcY);
+            var upChess = this._getUpChesses(srcX, srcY);
+            var downChess = this._getDownChesses(srcX, srcY);
+
+            // 开始实现移动车的规则.
+            for (var i = 0; i < allCanMovePoint.length; i++) {
+                var point = allCanMovePoint[i];
+                if (destX == point.x && destY == point.y) {
+                    // 如果我当前要移动的点在我的这个点集合中
+                    if (!point.tag) {
+                        //而且这个位置没有棋子
+                        // 开始进一步限定移动的范围
+                        // 上
+                        if (destY < srcY) {
+                            for (var j = 0; j < upChess.length; j++) {
+                                // 取出可以向上移动的所有棋子的位置
+                                var chess = upChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 下
+                        if (destY > srcY) {
+                            for (var j = 0; j < downChess.length; j++) {
+                                var chess = downChess[j];
+
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 左
+                        if (destX < srcX) {
+                            for (var j = 0; j < leftChess.length; j++) {
+                                var chess = leftChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                            return false;
+                        }
+                        // 右
+                        if (destX > srcX) {
+                            for (var j = 0; j < rightChess.length; j++) {
+                                var chess = rightChess[j];
+                                // 如果我点击的位置在这个集合里面
+                                if (destX == chess.x && destY == chess.y) {
+                                    if (!chess.tag) {
+                                        // 没有棋子
+                                        return true;
+                                    }
+                                }
+
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        },
+        _canMoveBing: function (color, srcX, srcY, destX, destY) {
+            // 兵的走棋规则： 只能走直线， 只能向前走， 过了河之后可以左右走
+            var isGoRiver = false;  // 默认情况下没有过河
+            // 要想左右走， 必须先过河
+            if (color == "black") {
+                if (srcY != 5 && srcY != 6) {
+                    isGoRiver = true;
+                }
+            } else {
+                if (srcY != 3 && srcY != 4) {
+                    isGoRiver = true;
+                }
+
+            }
+
+
+            // 黑色棋子的可以移动方向：上，左，右
+            if (color == "black") {
+                // 可以向上下左右四个方向来移动棋子
+                if (destY < srcY) {  //向上
+                    //获得可以向上行走的位置
+                    var upChess = this._getUpChesses(srcX, srcY);
+                    for (var i = 0; i < upChess.length; i++) {
+                        var chess = upChess[i];
+                        if (destX == chess.x && destY == chess.y) {
+                            // 如果我点击的位置在我向上走的这个集合里面
+                            if (!chess.tag) {
+                                // 而且这个位置没有棋子
+                                // 每次移动的间隔为1
+                                if (Math.abs(destX - srcX) == 1 || Math.abs(destY - srcY) == 1) {
+                                    return true;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            // 红色棋子的移动方向：下，左， 右
+            if (color == "red") {
+                if (destY > srcY) {  // 向下
+                    //获得可以向上行走的位置
+                    var downChess = this._getDownChesses(srcX, srcY);
+                    for (var i = 0; i < downChess.length; i++) {
+                        var chess = downChess[i];
+                        if (destX == chess.x && destY == chess.y) {
+                            // 如果我点击的位置在我向上走的这个集合里面
+                            if (!chess.tag) {
+                                // 而且这个位置没有棋子
+                                // 每次移动的间隔为1
+                                if (Math.abs(destX - srcX) == 1 || Math.abs(destY - srcY) == 1) {
+                                    return true;
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            // 向左行走
+            if (destX < srcX && isGoRiver) {  // 向左
+                //获得可以向左行走的位置
+                var leftChess = this._getLeftChesses(srcX, srcY);
+                for (var i = 0; i < leftChess.length; i++) {
+                    var chess = leftChess[i];
+                    if (destX == chess.x && destY == chess.y) {
+                        // 如果我点击的位置在我向上走的这个集合里面
+                        if (!chess.tag) {
+                            // 而且这个位置没有棋子
+                            // 每次移动的间隔为1
+                            if (Math.abs(destX - srcX) == 1 || Math.abs(destY - srcY) == 1) {
+                                return true;
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            // 向右走
+            if (destX > srcX && isGoRiver) {  // 向右
+                //获得可以向右行走的位置
+                var rightChess = this._getRightChesses(srcX, srcY);
+                for (var i = 0; i < rightChess.length; i++) {
+                    var chess = rightChess[i];
+                    if (destX == chess.x && destY == chess.y) {
+                        // 如果我点击的位置在我向上走的这个集合里面
+                        if (!chess.tag) {
+                            // 而且这个位置没有棋子
+                            // 每次移动的间隔为1
+                            if (Math.abs(destX - srcX) == 1 || Math.abs(destY - srcY) == 1) {
+                                return true;
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        },
+        _moveChess: function (srcX, srcY, destX, destY) {
+            // 移动棋子
+            this._selectedChess.x = destX;
+            this._selectedChess.y = destY;
+            // 颜色恢复
+            this._selectedChess.color = this._selectedChess.chessColor;
+
+
+            // 吃完棋子之后， 就恢复到初始状态
+            this._selectedChess = null;
+        },
+        _getMovePoint: function (srcX, srcY) {
+            // 主要用于获得一个点的8个方向上面的棋子状态
+            var x = srcX;
+            var y = srcY;
+            var movePoint = [];
+
+            for (var i = x - 1; i <= x + 1; i++) {
+                for (var j = y - 1; j <= y + 1; j++) {
+                    //首先判断该点是否在棋盘内
+                    if ((i >= 0 && i <= 8) && (j >= 0 && j <= 9)) {
+                        //接着判断该点有无棋子
+                        var tag = false;//假设该点没有棋子
+                        for (var m = 0; m < this._chesses.length; m++) {
+                            var chess = this._chesses[m];
+                            if (!chess.isDead) {
+                                if (i == chess.x && j == chess.y) {
+                                    tag = true;//说明有棋子
+                                    break;
+                                }
+                            }
+                        }
+                        movePoint.push({
+                            x: i,
+                            y: j,
+                            tag: tag
+                        });
+                    }
+                }
+            }
+            return movePoint;
+        },
+        _getXAndYChesss: function (srcX, srcY) {
+            // 求出来车可以移动的所有的位置
+            var MovePoint = [];
+            var allCanMovePoint = [];
+            var tagColor;
+
+            // 找出x坐标上的所有点
+            for (var i = 0; i < 10; i++) {
+                MovePoint.push({
+                    x: srcX,
+                    y: i
+                });
+            }
+
+            // 找出y坐标上的所有点
+            for (var j = 0; j < 9; j++) {
+                MovePoint.push({
+                    x: j,
+                    y: srcY
+                });
+            }
+
+
+            // 车的行走规则：走直线，只要直线上没有棋子都可以走： 只能走srcX或者srcY方向上面的直线
+            var tag = false;     // 默认没有棋子
+            for (var i = 0; i < MovePoint.length; i++) {
+                var point = MovePoint[i];
+
+                // 再看这些个坐标点上面有没有棋子
+                var chess = this._getChess(point.x, point.y);
+                if (chess) {
+                    tag = true;
+                    tagColor = chess.chessColor;
+                } else {
+                    tag = false;
+                }
+
+                // 把这些点的状态记录下来
+                allCanMovePoint.push({
+                    x: point.x,
+                    y: point.y,
+                    tag: tag,
+                    chessColor : tagColor
+                });
+            }
+
+            return allCanMovePoint;
+        },
+        _getRightChesses: function (srcX, srcY) {
+            var rightChess = [];
+            // 获得这个棋子之后的所有棋子
+            var firstChess = 0;
+            var tagColor = "";
+            for (var i = srcX; i <= 8; i++) {
+                var tag = false;
+                // 此时这个位置之后的棋子x坐标为srcX, srcX+1, ......
+                // y坐标一直未scrY
+
+                // 判断这个位置有没有棋子
+                var chess = this._getChess(i, srcY);
+                if (chess) {
+                    tag = true;
+                    tagColor = chess.chessColor;
+                    firstChess++;
+                }
+
+
+                rightChess.push({
+                    x: i,
+                    y: srcY,
+                    tag: tag,
+                    // 这里添加一个属性
+                    chessColor : tagColor
+                });
+
+                // 存储完毕之后，恢复初始状态
+                tagColor = "";
+
+                // 一旦有棋子就退出
+                if (firstChess == 2) {
+                    firstChess = 0; // 恢复初始状态
+                    break;
+                }
+
+            }
+            return rightChess;
+        },
+        _getLeftChesses: function (srcX, srcY) {
+            var leftChess = [];
+            var firstChess = 0;
+            var tagColor = "";
+            // 点击位置左边的所有棋子
+            for (var i = srcX; i >= 0; i--) {
+                var tag = false;
+                // 此时这个位置之后的棋子x坐标为srcX-1, srcX-2, ......
+                // y坐标一直未scrY
+                // 判断这个位置有没有棋子
+                var chess = this._getChess(i, srcY);
+                if (chess) {
+                    tag = true;
+                    firstChess++;
+                    tagColor = chess.chessColor;
+                }
+                leftChess.push({
+                    x: i,
+                    y: srcY,
+                    tag: tag,
+                    // 这里添加一个属性
+                    chessColor : tagColor
+                });
+
+                // 存储完毕之后，恢复初始状态
+                tagColor = "";
+
+                // 一旦有棋子就退出
+                if (firstChess == 2) {
+                    firstChess = 0; // 恢复初始状态
+                    break;
+                }
+            }
+            return leftChess;
+        },
+        _getUpChesses: function (srcX, srcY) {
+            var upChess = [];
+            var firstChess = 0;
+            var tagColor = "";
+            // 点击位置上面的所有棋子
+            for (var i = srcY; i >= 0; i--) {
+                var tag = false;
+                // 此时这个位置之后的棋子y坐标为srcY+1, srcY+2, ......
+                // x坐标一直未scrX
+                // 判断这个位置有没有棋子
+                var chess = this._getChess(srcX, i);
+                if (chess) {
+                    tag = true;
+                    firstChess++;
+                    tagColor = chess.chessColor;
+                }
+
+
+                upChess.push({
+                    x: srcX,
+                    y: i,
+                    tag: tag,
+                    // 这里添加一个属性
+                    chessColor : tagColor
+                });
+
+                // 存储完毕之后，恢复初始状态
+                tagColor = "";
+
+                // 一旦有棋子就退出
+                if (firstChess == 2) {
+                    firstChess = 0; // 恢复初始状态
+                    break;
+                }
+            }
+            return upChess;
+        },
+        _getDownChesses: function (srcX, srcY) {
+            var downChess = [];
+            var firstChess = 0;
+            var tagColor = "";
+            // 点击位置下面的所有棋子
+            for (var i = srcY; i <= 9; i++) {
+                var tag = false;
+                // 此时这个位置之后的棋子y坐标为srcY+1, srcY+2, ......
+                // x坐标一直未scrX
+                // 判断这个位置有没有棋子
+                var chess = this._getChess(srcX, i);
+                if (chess) {
+                    tag = true;
+                    firstChess++;
+                    tagColor = chess.chessColor;
+                }
+                downChess.push({
+                    x: srcX,
+                    y: i,
+                    tag: tag,
+                    // 这里添加一个属性
+                    chessColor : tagColor
+                });
+
+                // 存储完毕之后，恢复初始状态
+                tagColor = "";
+                // 一旦有棋子就退出
+                if (firstChess == 2) {
+                    firstChess = 0; // 恢复初始状态
+                    break;
+                }
+            }
+
+            return downChess;
+        },
+        _canKill: function (srcX, srcY, destX, destY) {
+            // 象棋的吃子功能介绍
+            //1. 如果两次点击的棋子颜色不同
+            //2. 看是否满足象棋的走棋规则
+            //3. 如果满足象棋的走棋规则， 而且两次点击的颜色不同我就可以吃子
+            // 点击棋子的颜色和吃子的颜色
+            var srcChess = this._getChess(srcX, srcY);
+            var killChess = this._getChess(destX, destY);
+            var color = srcChess.chessColor;
+
+            // 如果这两个位置都有棋子(吃子的前提是两次点击的位置都有棋子)
+            if (srcChess != null && killChess != null){
+                // 看两次的颜色是不是相同
+                 if (srcChess.chessColor != killChess.chessColor){
+                     // 可以吃
+                     // 然后在我吃棋子之前再判断这个棋子能不能移动
+                     var type = srcChess.type;
+                     // 根据这个棋子的规则来判断
+                     switch (type) {
+                         case "CHE":
+                             if (this._canMoveChe(color, srcX, srcY, destX, destY)) {
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 /*srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;*/
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                             break;
+                         case "MA":
+                             if (this._canMoveMa(color, srcX, srcY, destX, destY)) {
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                             break;
+                         case "XIANG":
+                             if (this._canMoveXiang(color, srcX, srcY, destX, destY)) {
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                             break;
+                         case "SHI":
+                             if (this._canMoveShi(color, srcX, srcY, destX, destY)) {
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                             break;
+                         case "JIANG":
+                             if (this._canMoveJiang(color, srcX, srcY, destX, destY)) {
+
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+
+                             break;
+                         case "PAO":
+                             if (this._canMovePao(color, srcX, srcY, destX, destY)) {
+
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                         case "BING":
+                             if (this._canMoveBing(color, srcX, srcY, destX, destY)) {
+                                 // 移动棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 // 开始吃棋子
+                                 this._moveChess(srcX, srcY, destX, destY);
+
+                                 //  吃完棋子之后的操作(我方棋子补上)
+                                 srcChess.x = destX;
+                                 srcChess.y = destY;
+
+                                 // 对方棋子消失
+                                 killChess.isDead = true;
+
+                                 return;
+                             } else {
+                                 // 点击了颜色相同但是属性不同的其他棋子
+                                 alert("不能移动棋子！");
+
+                                 // 颜色相同的同类棋子就恢复初始状态
+                                 this._selectedChess.color = this._selectedChess.chessColor;
+                                 this._selectedChess = null;
+
+                                 return;
+                             }
+                             break;
+                     }
+                 } else {
+                     // 如果点击的棋子颜色相同
+                     alert("请不要互相残杀！");
+
+                     // 颜色相同的同类棋子就恢复初始状态
+                     this._selectedChess.color = this._selectedChess.chessColor;
+                     this._selectedChess = null;
+
+                     return;
+                 }
+            } else if(srcChess != null && killChess == null){       // 用户走棋的操作肯定是OK的
+                var type = srcChess.type;
+                // 表示要移动棋子
+                // 首先看能不能移动
+                // 我们先来判断能不能移动棋子， 然后再来判断能不能吃子
+                switch (type) {
+                    case "CHE":
+                        if (this._canMoveChe(color, srcX, srcY, destX, destY)) {
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                        break;
+                    case "MA":
+                        if (this._canMoveMa(color, srcX, srcY, destX, destY)) {
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                        break;
+                    case "XIANG":
+                        if (this._canMoveXiang(color, srcX, srcY, destX, destY)) {
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                        break;
+                    case "SHI":
+                        if (this._canMoveShi(color, srcX, srcY, destX, destY)) {
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                        break;
+                    case "JIANG":
+                        if (this._canMoveJiang(color, srcX, srcY, destX, destY)) {
+
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+
+                        break;
+                    case "PAO":
+                        if (this._canMovePao(color, srcX, srcY, destX, destY)) {
+
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                    case "BING":
+                        if (this._canMoveBing(color, srcX, srcY, destX, destY)) {
+                            // 移动棋子
+                            this._moveChess(srcX, srcY, destX, destY);
+
+                            return;
+                        } else {
+                            // 点击了颜色相同但是属性不同的其他棋子
+                            alert(srcChess._getChessText()+"走法违规！");
+
+                            // 颜色相同的同类棋子就恢复初始状态
+                            this._selectedChess.color = this._selectedChess.chessColor;
+                            this._selectedChess = null;
+
+                            return;
+                        }
+                        break;
+                }
+            }
+
+
+        },
+        _getChess: function (x, y) {
+            for (var i = 0; i < this._chesses.length; i++) {
+                var chess = this._chesses[i];
+                if (!chess.isDead) {
+                    if (chess.x == x && chess.y == y) {
+                        return chess;
+                    }
+                }
+
+            }
+            return null;
+        }
+    }
+
+
+    var myGame = new Game();
+    myGame.execute();
+
+</script>
+</body>
+</html>
